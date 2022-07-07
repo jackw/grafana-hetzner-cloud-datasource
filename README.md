@@ -12,6 +12,8 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
 
 -- APPEND GETTING STARTED HERE --
 
+HALLO LEVI!!!!!!!!! IT'S WORKERING!!!!!!
+
 ## Learn more
 
 - [Build a data source plugin tutorial](https://grafana.com/tutorials/build-a-data-source-plugin)

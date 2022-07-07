@@ -25,12 +25,15 @@ var (
 
 // NewDatasource creates a new datasource instance.
 func NewDatasource(_ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	return &Datasource{}, nil
+	log.DefaultLogger.Info("I couldn't get it to log the datasource instance settings here")
+	return &Datasource{name: "Jack"}, nil
 }
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
-type Datasource struct{}
+type Datasource struct {
+	name string
+}
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
