@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Grafana Hetzner Cloud Datasource",
+  "id": "my-org-grafana-hetzner-cloud-datasource",
+  "metrics": true,
+  "backend": true,
+  "executable": "gpx_grafana_hetzner_cloud_datasource",
+  "info": {
+    "description": "Plugin description",
+    "author": {
+      "name": "My org"
+    },
+    "keywords": [
+      "datasource"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/grafana-starter-datasource"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/grafana-starter-datasource/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": "^8.3.4",
+    "plugins": []
+  }
+}
