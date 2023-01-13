@@ -138,10 +138,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRe
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: "Failed to get servers, please check your API token is correct.",
-		}, nil
+		return newHealthCheckErrorf("Failed to get servers, please check your API token is correct."), nil
 	}
 
 	return &backend.CheckHealthResult{
