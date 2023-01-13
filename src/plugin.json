@@ -1,19 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Grafana Hetzner Cloud Datasource",
-  "id": "my-org-grafana-hetzner-cloud-datasource",
+  "name": "Hetzner Cloud Datasource",
+  "id": "heywesty-hetznercloud-datasource",
   "metrics": true,
   "backend": true,
-  "executable": "gpx_grafana_hetzner_cloud_datasource",
+  "executable": "gpx_hetzner_cloud_datasource",
   "info": {
     "description": "Plugin description",
     "author": {
-      "name": "My org"
+      "name": "heywesty"
     },
-    "keywords": [
-      "datasource"
-    ],
+    "keywords": ["datasource", "hetzner", "cloud", "vps"],
     "logos": {
       "small": "img/logo.png",
       "large": "img/logo.png"
@@ -21,11 +19,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/grafana/grafana-starter-datasource"
+        "url": "https://github.com/jackw/grafana-hetzner-cloud-datasource"
       },
       {
         "name": "License",
-        "url": "https://github.com/grafana/grafana-starter-datasource/blob/master/LICENSE"
+        "url": "https://github.com/jackw/grafana-hetzner-cloud-datasource/blob/main/LICENSE"
       }
     ],
     "screenshots": [],

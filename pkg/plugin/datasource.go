@@ -3,10 +3,12 @@ package plugin
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
+	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -24,15 +26,30 @@ var (
 )
 
 // NewDatasource creates a new datasource instance.
-func NewDatasource(_ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	log.DefaultLogger.Info("I couldn't get it to log the datasource instance settings here")
-	return &Datasource{name: "Jack"}, nil
+func NewDatasource(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	log.DefaultLogger.Info("Get's get this party started!")
+	httpOptions, err := settings.HTTPClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := httpclient.New(httpOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Datasource{
+		settings:   settings,
+		httpClient: client,
+	}, nil
+
 }
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type Datasource struct {
-	name string
+	settings   backend.DataSourceInstanceSettings
+	httpClient *http.Client
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -40,6 +57,7 @@ type Datasource struct {
 // be disposed and a new one will be created using NewSampleDatasource factory function.
 func (d *Datasource) Dispose() {
 	// Clean up datasource instance resources.
+	d.httpClient.CloseIdleConnections()
 }
 
 // QueryData handles multiple queries and returns multiple responses.
@@ -77,6 +95,11 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		return response
 	}
 
+	// TODO: get metrics from hetzner cloud endpoint.
+	// curl \
+	// -H "Authorization: Bearer $API_TOKEN" \
+	// 'https://api.hetzner.cloud/v1/servers/{id}/metrics'
+
 	// create data frame response.
 	frame := data.NewFrame("response")
 
@@ -96,19 +119,39 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 // The main use case for these health checks is the test button on the
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
-func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Info("CheckHealth called", "request", req)
 
-	var status = backend.HealthStatusOk
-	var message = "Data source is working"
+	// TODO: lets hit this endpoint and tell the user if it works or not.
+	// curl -H "Authorization: Bearer $API_TOKEN" \
+	// https://api.hetzner.cloud/v1/servers
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.hetzner.cloud/v1/servers", nil)
 
-	if rand.Int()%2 == 0 {
-		status = backend.HealthStatusError
-		message = "randomized error"
+	if err != nil {
+		return newHealthCheckErrorf("could not create request"), nil
+	}
+
+	resp, err := d.httpClient.Do(httpReq)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Failed to get servers, please check your API token is correct.",
+		}, nil
 	}
 
 	return &backend.CheckHealthResult{
-		Status:  status,
-		Message: message,
+		Status:  backend.HealthStatusOk,
+		Message: "Successfully queried the Hetzner Cloud API.",
 	}, nil
+}
+
+// newHealthCheckErrorf returns a new *backend.CheckHealthResult with its status set to backend.HealthStatusError
+// and the specified message, which is formatted with Sprintf.
+func newHealthCheckErrorf(format string, args ...interface{}) *backend.CheckHealthResult {
+	return &backend.CheckHealthResult{Status: backend.HealthStatusError, Message: fmt.Sprintf(format, args...)}
 }

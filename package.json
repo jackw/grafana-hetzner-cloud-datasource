@@ -13,9 +13,13 @@
     "e2e": "yarn cypress install && yarn grafana-e2e run",
     "e2e:update": "yarn cypress install && yarn grafana-e2e run --update-screenshots",
     "server": "docker-compose up --build",
+    "start": "mage -v build:linux && yarn server -d && yarn dev",
     "sign": "npx --yes @grafana/sign-plugin"
   },
-  "author": "My org",
+  "author": {
+    "name": "Jack Westbrook",
+    "url": "https://heywesty.com"
+  },
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/core": "^7.16.7",
