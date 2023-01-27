@@ -2,7 +2,10 @@ module github.com/jackw/grafana-hetzner-cloud-datasource
 
 go 1.17
 
-require github.com/grafana/grafana-plugin-sdk-go v0.147.0
+require (
+	github.com/grafana/grafana-plugin-sdk-go v0.147.0
+	github.com/hetznercloud/hcloud-go v1.39.0
+)
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect

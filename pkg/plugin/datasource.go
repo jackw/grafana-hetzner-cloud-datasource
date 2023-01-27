@@ -1,4 +1,4 @@
-package plugin
+package hetzner
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/hetznercloud/hcloud-go/hcloud"
 )
 
 // Make sure Datasource implements required interfaces. This is important to do
@@ -95,11 +96,6 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		return response
 	}
 
-	// TODO: get metrics from hetzner cloud endpoint.
-	// curl \
-	// -H "Authorization: Bearer $API_TOKEN" \
-	// 'https://api.hetzner.cloud/v1/servers/{id}/metrics'
-
 	// create data frame response.
 	frame := data.NewFrame("response")
 
@@ -122,23 +118,27 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Info("CheckHealth called", "request", req)
 
-	// TODO: lets hit this endpoint and tell the user if it works or not.
-	// curl -H "Authorization: Bearer $API_TOKEN" \
-	// https://api.hetzner.cloud/v1/servers
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.hetzner.cloud/v1/servers", nil)
+	client, err := NewHetznerAPI(d.settings.DecryptedSecureJSONData["apiToken"])
 
 	if err != nil {
-		return newHealthCheckErrorf("could not create request"), nil
+		return newHealthCheckErrorf("could not create hetzner client"), nil
 	}
 
-	resp, err := d.httpClient.Do(httpReq)
+	servers, resp, err := client.Server.List(context.Background(), hcloud.ServerListOpts{})
 
 	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
 		return newHealthCheckErrorf("Failed to get servers, please check your API token is correct."), nil
+	}
+
+	log.DefaultLogger.Info("Response", "response", resp.Body)
+	log.DefaultLogger.Info("Servers", "servers", servers[0].Name)
+	firstServer := servers[0]
+
+	if firstServer != nil {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusOk,
+			Message: fmt.Sprintf("Successfully queried the Hetzner Cloud API and found server named `%s`", firstServer.Name),
+		}, nil
 	}
 
 	return &backend.CheckHealthResult{

@@ -5,12 +5,10 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/jackw/grafana-hetzner-cloud-datasource/pkg/plugin"
+	hetzner "github.com/jackw/grafana-hetzner-cloud-datasource/pkg/plugin"
 )
 
 func main() {
-	log.DefaultLogger.Info("BUT WHAT HAPPENS IF YOU ADD THIS TO NewDatasource?")
-
 	// Start listening to requests sent from Grafana. This call is blocking so
 	// it won't finish until Grafana shuts down the process or the plugin choose
 	// to exit by itself using os.Exit. Manage automatically manages life cycle
@@ -19,7 +17,7 @@ func main() {
 	// from Grafana to create different instances of SampleDatasource (per datasource
 	// ID). When datasource configuration changed Dispose method will be called and
 	// new datasource instance created using NewSampleDatasource factory.
-	if err := datasource.Manage("heywesty-hetznercloud-datasource", plugin.NewDatasource, datasource.ManageOpts{}); err != nil {
+	if err := datasource.Manage("heywesty-hetznercloud-datasource", hetzner.NewDatasource, datasource.ManageOpts{}); err != nil {
 		log.DefaultLogger.Error(err.Error())
 		os.Exit(1)
 	}
