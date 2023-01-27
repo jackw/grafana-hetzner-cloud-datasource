@@ -10,9 +10,9 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
 
 ## Getting started
 
--- APPEND GETTING STARTED HERE --
+## Developing
 
-HALLO LEVI!!!!!!!!! IT'S WORKERING!!!!!!
+Setup a HETZNER_API_TOKEN in `.dev.env` in root of repo. You can get a token from https://console.hetzner.cloud/
 
 ## Learn more
 
