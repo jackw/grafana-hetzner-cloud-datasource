@@ -8,6 +8,6 @@ datasources:
     version: 1
     access: proxy
     isDefault: true
-    secureJsonFields:
+    secureJsonData:
       apiToken: $HETZNER_API_TOKEN
     version: 1
