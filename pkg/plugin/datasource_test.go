@@ -1,4 +1,4 @@
-package hetzner
+package plugin
 
 import (
 	"context"

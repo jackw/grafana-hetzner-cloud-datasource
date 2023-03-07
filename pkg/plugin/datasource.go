@@ -1,15 +1,12 @@
-package hetzner
+package plugin
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/hetznercloud/hcloud-go/hcloud"
@@ -21,44 +18,34 @@ import (
 // backend.CheckHealthHandler interfaces. Plugin should not implement all these
 // interfaces- only those which are required for a particular task.
 var (
-	_ backend.QueryDataHandler      = (*Datasource)(nil)
-	_ backend.CheckHealthHandler    = (*Datasource)(nil)
-	_ instancemgmt.InstanceDisposer = (*Datasource)(nil)
+	_ backend.QueryDataHandler   = (*Datasource)(nil)
+	_ backend.CheckHealthHandler = (*Datasource)(nil)
 )
-
-// NewDatasource creates a new datasource instance.
-func NewDatasource(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	log.DefaultLogger.Info("Get's get this party started!")
-	httpOptions, err := settings.HTTPClientOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := httpclient.New(httpOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Datasource{
-		settings:   settings,
-		httpClient: client,
-	}, nil
-
-}
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type Datasource struct {
-	settings   backend.DataSourceInstanceSettings
-	httpClient *http.Client
+	client *hcloud.Client
+}
+
+// NewDatasource creates a new datasource instance.
+func NewDatasource(ctx context.Context, settings Settings) *Datasource {
+	log.DefaultLogger.Info("NewDatasource called", "settings", settings.APIToken)
+	hetzClient := hcloud.NewClient(hcloud.WithToken(settings.APIToken))
+
+	backend.Logger.Info("NewDatasource", "client", hetzClient)
+
+	return &Datasource{
+		client: hetzClient,
+	}
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
 // be disposed and a new one will be created using NewSampleDatasource factory function.
 func (d *Datasource) Dispose() {
-	// Clean up datasource instance resources.
-	d.httpClient.CloseIdleConnections()
+	// TODO: check this is how to clean up datasource instance resources...
+	d.client = nil
 }
 
 // QueryData handles multiple queries and returns multiple responses.
@@ -116,28 +103,18 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
 func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	log.DefaultLogger.Info("CheckHealth called", "request", req)
 
-	client, err := NewHetznerAPI(d.settings.DecryptedSecureJSONData["apiToken"])
-
-	if err != nil {
-		return newHealthCheckErrorf("could not create hetzner client"), nil
-	}
-
-	servers, resp, err := client.Server.List(context.Background(), hcloud.ServerListOpts{})
+	servers, err := GetAllServers(ctx, d.client)
 
 	if err != nil {
 		return newHealthCheckErrorf("Failed to get servers, please check your API token is correct."), nil
 	}
 
-	log.DefaultLogger.Info("Response", "response", resp.Body)
-	log.DefaultLogger.Info("Servers", "servers", servers[0].Name)
-	firstServer := servers[0]
-
-	if firstServer != nil {
+	if len(servers) > 0 {
+		log.DefaultLogger.Info("CheckHealth called", "server", servers[0])
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusOk,
-			Message: fmt.Sprintf("Successfully queried the Hetzner Cloud API and found server named `%s`", firstServer.Name),
+			Message: fmt.Sprintf("Successfully queried the Hetzner Cloud API and found server named `%s`", servers[0].Name),
 		}, nil
 	}
 
