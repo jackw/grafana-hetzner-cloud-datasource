@@ -11,7 +11,7 @@ ENV GF_AUTH_BASIC_ENABLED "false"
 # Set development mode so plugins can be loaded without the need to sign
 ENV GF_DEFAULT_APP_MODE "development"
 # Log the stuff that Will was talking about yo!
-ENV GF_LOG_FILTERS "plugin.process.manager:debug
+ENV GF_LOG_FILTERS "plugin.process.manager:debug"
 
 
 # Inject livereload script into grafana index.html
